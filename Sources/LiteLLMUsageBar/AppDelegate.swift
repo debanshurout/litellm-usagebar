@@ -36,7 +36,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             apiKeyStore: keyStore,
             usageService: usageService,
             connectionTester: liteLLMClient,
-            amountVisibilityStore: amountVisibilityStore,
             notificationCenter: notificationCenter
         )
         statusBarController = StatusBarController(

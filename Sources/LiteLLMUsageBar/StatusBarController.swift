@@ -63,7 +63,7 @@ final class StatusBarController: NSObject {
             return
         }
 
-        statusItem.length = 28
+        statusItem.length = NSStatusItem.squareLength
         button.title = ""
         button.image = Self.dollarIcon()
         button.imagePosition = .imageOnly
@@ -94,6 +94,7 @@ final class StatusBarController: NSObject {
         }
 
         menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: amountVisibilityStore.toggleButtonTitle, action: #selector(toggleAmountVisibility), keyEquivalent: "", target: self))
         menu.addItem(NSMenuItem(title: "Refresh Now", action: #selector(refreshNow), keyEquivalent: "r", target: self))
         menu.addItem(NSMenuItem(title: "Open LiteLLM UI", action: #selector(openLiteLLMUI), keyEquivalent: "o", target: self))
         menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettingsWindow), keyEquivalent: ",", target: self))
@@ -106,6 +107,10 @@ final class StatusBarController: NSObject {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.isEnabled = false
         return item
+    }
+
+    @objc private func toggleAmountVisibility() {
+        amountVisibilityStore.toggle()
     }
 
     @objc private func refreshNow() {
@@ -127,25 +132,25 @@ final class StatusBarController: NSObject {
 
 private extension StatusBarController {
     static func dollarIcon() -> NSImage {
-        let size = NSSize(width: 18, height: 18)
+        let size = NSSize(width: 16, height: 16)
         let image = NSImage(size: size)
         image.lockFocus()
 
-        NSColor(calibratedRed: 0.12, green: 0.58, blue: 0.94, alpha: 1).set()
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .center
+        NSColor.black.set()
+        let symbol = NSString(string: "$")
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.boldSystemFont(ofSize: 22),
-            .foregroundColor: NSColor(calibratedRed: 0.12, green: 0.58, blue: 0.94, alpha: 1),
-            .paragraphStyle: paragraphStyle
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 15, weight: .bold),
+            .foregroundColor: NSColor.black
         ]
-        NSString(string: "$").draw(
-            in: NSRect(x: 0, y: -3, width: size.width, height: size.height + 4),
-            withAttributes: attributes
+        let textSize = symbol.size(withAttributes: attributes)
+        let drawPoint = NSPoint(
+            x: (size.width - textSize.width) / 2,
+            y: (size.height - textSize.height) / 2 - 1
         )
+        symbol.draw(at: drawPoint, withAttributes: attributes)
 
         image.unlockFocus()
-        image.isTemplate = false
+        image.isTemplate = true
         return image
     }
 }
