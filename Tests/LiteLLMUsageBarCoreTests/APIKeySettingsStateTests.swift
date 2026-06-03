@@ -8,7 +8,7 @@ final class APIKeySettingsStateTests: XCTestCase {
         XCTAssertTrue(state.hasSavedKey)
         XCTAssertFalse(state.isEditing)
         XCTAssertFalse(state.shouldShowEditor)
-        XCTAssertEqual(state.savedMessage, "LiteLLM token saved")
+        XCTAssertEqual(state.savedMessage, "Token Saved")
     }
 
     func testResaveSwitchesExistingKeyToEditMode() {

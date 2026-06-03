@@ -9,7 +9,7 @@ public struct APIKeySettingsState: Equatable {
     }
 
     public var savedMessage: String {
-        "LiteLLM token saved"
+        "Token Saved"
     }
 
     public init(existingAPIKey: String?) {
