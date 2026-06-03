@@ -83,19 +83,20 @@ final class StatusBarController: NSObject {
         header.isEnabled = false
         menu.addItem(header)
         menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: amountVisibilityStore.toggleButtonTitle, action: #selector(toggleAmountVisibility), keyEquivalent: "", target: self))
+        menu.addItem(.separator())
         menu.addItem(disabledItem(display.monthToDateText))
         menu.addItem(disabledItem(display.todayText))
         menu.addItem(disabledItem(display.budgetText))
-        menu.addItem(disabledItem(display.lastUpdatedText))
+        menu.addItem(.separator())
 
+        menu.addItem(disabledItem(display.lastUpdatedText))
         if let message = display.messageText {
-            menu.addItem(.separator())
             menu.addItem(disabledItem(message))
         }
-
-        menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: amountVisibilityStore.toggleButtonTitle, action: #selector(toggleAmountVisibility), keyEquivalent: "", target: self))
         menu.addItem(NSMenuItem(title: "Refresh Now", action: #selector(refreshNow), keyEquivalent: "r", target: self))
+        menu.addItem(.separator())
+
         menu.addItem(NSMenuItem(title: "Open LiteLLM UI", action: #selector(openLiteLLMUI), keyEquivalent: "o", target: self))
         menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettingsWindow), keyEquivalent: ",", target: self))
         menu.addItem(.separator())
