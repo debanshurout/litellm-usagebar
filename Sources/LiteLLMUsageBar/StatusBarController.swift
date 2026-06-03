@@ -63,7 +63,7 @@ final class StatusBarController: NSObject {
             return
         }
 
-        statusItem.length = NSStatusItem.squareLength
+        statusItem.length = Self.hiddenAmountItemLength
         button.title = ""
         button.image = Self.dollarIcon()
         button.imagePosition = .imageOnly
@@ -131,6 +131,8 @@ final class StatusBarController: NSObject {
 }
 
 private extension StatusBarController {
+    static let hiddenAmountItemLength: CGFloat = 20
+
     static func dollarIcon() -> NSImage {
         if let symbol = NSImage(systemSymbolName: "dollarsign.circle.fill", accessibilityDescription: "LiteLLM Usage") {
             let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
