@@ -54,14 +54,19 @@ public final class URLSessionLiteLLMClient: LiteLLMClient {
 
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
+            DiagnosticLogger.log("GET \(url.path) failed: malformed HTTP response")
             throw LiteLLMClientError.malformedResponse
         }
+
+        DiagnosticLogger.log("GET \(url.path) status=\(httpResponse.statusCode)")
 
         switch httpResponse.statusCode {
         case 200..<300:
             do {
                 return try decoder.decode(T.self, from: data)
             } catch {
+                DiagnosticLogger.log("GET \(url.path) decode failed: \(error)")
+                logResponseShape(data: data, path: url.path)
                 throw LiteLLMClientError.malformedResponse
             }
         case 401, 403:
@@ -79,4 +84,36 @@ public final class URLSessionLiteLLMClient: LiteLLMClient {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
+
+    private func logResponseShape(data: Data, path: String) {
+        guard let object = try? JSONSerialization.jsonObject(with: data) else {
+            DiagnosticLogger.log("GET \(path) response shape: non-json body")
+            return
+        }
+
+        if let dictionary = object as? [String: Any] {
+            DiagnosticLogger.log("GET \(path) response top-level keys=\(dictionary.keys.sorted())")
+            for key in ["results", "data", "daily_activity", "activity"] {
+                if let rows = dictionary[key] as? [[String: Any]], let firstRow = rows.first {
+                    DiagnosticLogger.log("GET \(path) response \(key)[0] keys=\(firstRow.keys.sorted())")
+                    logNestedKeys(firstRow, path: path, prefix: "\(key)[0]")
+                    return
+                }
+            }
+            return
+        }
+
+        if let rows = object as? [[String: Any]], let firstRow = rows.first {
+            DiagnosticLogger.log("GET \(path) response array[0] keys=\(firstRow.keys.sorted())")
+            logNestedKeys(firstRow, path: path, prefix: "array[0]")
+        }
+    }
+
+    private func logNestedKeys(_ dictionary: [String: Any], path: String, prefix: String) {
+        for (key, value) in dictionary.sorted(by: { $0.key < $1.key }) {
+            if let nested = value as? [String: Any] {
+                DiagnosticLogger.log("GET \(path) response \(prefix).\(key) keys=\(nested.keys.sorted())")
+            }
+        }
+    }
 }

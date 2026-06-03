@@ -51,6 +51,41 @@ final class LiteLLMModelsTests: XCTestCase {
         XCTAssertEqual(response.rows[0].requestCount, 2)
     }
 
+    func testDecodesDailyActivityNestedMetrics() throws {
+        let json = """
+        {
+          "metadata": {
+            "page": 1
+          },
+          "results": [
+            {
+              "date": "2026-06-03",
+              "metrics": {
+                "spend": 4.75,
+                "prompt_tokens": 100,
+                "completion_tokens": 40,
+                "total_tokens": 140,
+                "api_requests": 3
+              },
+              "breakdown": {
+                "models": {}
+              }
+            }
+          ]
+        }
+        """.data(using: .utf8)!
+
+        let response = try JSONDecoder.liteLLM.decode(DailyActivityResponse.self, from: json)
+
+        XCTAssertEqual(response.rows.count, 1)
+        XCTAssertEqual(response.rows[0].day, "2026-06-03")
+        XCTAssertEqual(response.rows[0].spend, Decimal(string: "4.75")!)
+        XCTAssertEqual(response.rows[0].promptTokens, 100)
+        XCTAssertEqual(response.rows[0].completionTokens, 40)
+        XCTAssertEqual(response.rows[0].totalTokens, 140)
+        XCTAssertEqual(response.rows[0].requestCount, 3)
+    }
+
     func testDecodesUserInfoBudgetFromUserThenKey() throws {
         let json = """
         {

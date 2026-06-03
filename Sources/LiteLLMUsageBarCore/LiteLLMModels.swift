@@ -93,6 +93,7 @@ public struct DailyUsageRow: Decodable, Equatable {
         case totalTokens = "total_tokens"
         case requestCount = "request_count"
         case numRequests = "num_requests"
+        case metrics
     }
 
     public init(
@@ -113,12 +114,51 @@ public struct DailyUsageRow: Decodable, Equatable {
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let metrics = try container.decodeIfPresent(DailyUsageMetrics.self, forKey: .metrics)
         self.day = try container.decodeFirstString(keys: [.date, .day])
-        self.spend = try container.decodeFirstDecimal(keys: [.spend, .totalSpend])
+        guard let spend = container.decodeFirstOptionalDecimal(keys: [.spend, .totalSpend]) ?? metrics?.spend else {
+            throw DecodingError.keyNotFound(
+                CodingKeys.spend,
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Decimal not found for spend, total_spend, or metrics.spend"
+                )
+            )
+        }
+        self.spend = spend
+        self.promptTokens = (try container.decodeIfPresent(Int.self, forKey: .promptTokens)) ?? metrics?.promptTokens
+        self.completionTokens = (try container.decodeIfPresent(Int.self, forKey: .completionTokens)) ?? metrics?.completionTokens
+        self.totalTokens = (try container.decodeIfPresent(Int.self, forKey: .totalTokens)) ?? metrics?.totalTokens
+        self.requestCount = container.decodeFirstOptionalInt(keys: [.requestCount, .numRequests]) ?? metrics?.requestCount
+    }
+}
+
+private struct DailyUsageMetrics: Decodable, Equatable {
+    let spend: Decimal?
+    let promptTokens: Int?
+    let completionTokens: Int?
+    let totalTokens: Int?
+    let requestCount: Int?
+
+    private enum CodingKeys: String, CodingKey {
+        case spend
+        case totalSpend = "total_spend"
+        case promptTokens = "prompt_tokens"
+        case completionTokens = "completion_tokens"
+        case totalTokens = "total_tokens"
+        case requestCount = "request_count"
+        case numRequests = "num_requests"
+        case apiRequests = "api_requests"
+        case successfulRequests = "successful_requests"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.spend = container.decodeFirstOptionalDecimal(keys: [.spend, .totalSpend])
         self.promptTokens = try container.decodeIfPresent(Int.self, forKey: .promptTokens)
         self.completionTokens = try container.decodeIfPresent(Int.self, forKey: .completionTokens)
         self.totalTokens = try container.decodeIfPresent(Int.self, forKey: .totalTokens)
-        self.requestCount = container.decodeFirstOptionalInt(keys: [.requestCount, .numRequests])
+        self.requestCount = container.decodeFirstOptionalInt(keys: [.requestCount, .numRequests, .apiRequests, .successfulRequests])
     }
 }
 

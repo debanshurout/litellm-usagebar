@@ -74,10 +74,12 @@ public final class UsageService: ObservableObject {
 
         let stale = state.latestSnapshot ?? ((try? snapshotStore.load()) ?? nil)
         guard let apiKey = try? apiKeyStore.loadAPIKey(), apiKey.isEmpty == false else {
+            DiagnosticLogger.log("refresh skipped: missing API key")
             state = .missingAPIKey(stale: stale)
             return
         }
 
+        DiagnosticLogger.log("refresh started trigger=\(trigger)")
         state = .loading(stale: stale)
         let token = UUID()
         refreshToken = token
@@ -99,6 +101,7 @@ public final class UsageService: ObservableObject {
                     guard let self, self.refreshToken == token else {
                         return
                     }
+                    DiagnosticLogger.log("refresh succeeded budgetAvailable=\(snapshot.budget != nil)")
                     self.state = .loaded(snapshot)
                 }
             } catch {
@@ -106,7 +109,9 @@ public final class UsageService: ObservableObject {
                     guard let self, self.refreshToken == token else {
                         return
                     }
-                    self.state = .failed(error: Self.map(error), stale: stale)
+                    let mappedError = Self.map(error)
+                    DiagnosticLogger.log("refresh failed mappedError=\(mappedError) underlying=\(error)")
+                    self.state = .failed(error: mappedError, stale: stale)
                 }
             }
         }
