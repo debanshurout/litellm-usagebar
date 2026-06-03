@@ -63,11 +63,10 @@ final class StatusBarController: NSObject {
             return
         }
 
-        statusItem.length = NSStatusItem.variableLength
+        statusItem.length = NSStatusItem.squareLength
         button.title = ""
         button.image = Self.dollarIcon()
-        button.image?.size = NSSize(width: 16, height: 16)
-        button.imagePosition = .imageLeft
+        button.imagePosition = .imageOnly
     }
 
     @objc private func showMenu() {
@@ -136,11 +135,25 @@ private extension StatusBarController {
         if let symbol = NSImage(systemSymbolName: "dollarsign.circle.fill", accessibilityDescription: "LiteLLM Usage") {
             let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
             let configuredSymbol = symbol.withSymbolConfiguration(configuration) ?? symbol
-            configuredSymbol.isTemplate = true
-            return configuredSymbol
+            return statusBarIcon(configuredSymbol, verticalOffset: -1)
         }
 
         return fallbackDollarIcon()
+    }
+
+    static func statusBarIcon(_ source: NSImage, verticalOffset: CGFloat) -> NSImage {
+        let size = NSSize(width: 16, height: 16)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        source.draw(
+            in: NSRect(x: 0, y: verticalOffset, width: size.width, height: size.height),
+            from: .zero,
+            operation: .sourceOver,
+            fraction: 1
+        )
+        image.unlockFocus()
+        image.isTemplate = true
+        return image
     }
 
     static func fallbackDollarIcon() -> NSImage {
@@ -157,7 +170,7 @@ private extension StatusBarController {
         let textSize = symbol.size(withAttributes: attributes)
         let drawPoint = NSPoint(
             x: (size.width - textSize.width) / 2,
-            y: (size.height - textSize.height) / 2
+            y: (size.height - textSize.height) / 2 - 1
         )
         symbol.draw(at: drawPoint, withAttributes: attributes)
 
