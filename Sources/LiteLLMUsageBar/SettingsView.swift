@@ -35,7 +35,7 @@ final class SettingsViewModel: ObservableObject {
     func save() {
         let trimmedAPIKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmedAPIKey.isEmpty == false else {
-            statusText = "API key is required"
+            statusText = "LiteLLM token is required"
             return
         }
 
@@ -47,7 +47,7 @@ final class SettingsViewModel: ObservableObject {
             statusText = ""
             usageService.reloadAfterKeyChange()
         } catch {
-            statusText = "Unable to save API key"
+            statusText = "Unable to save LiteLLM token"
         }
     }
 
@@ -57,10 +57,10 @@ final class SettingsViewModel: ObservableObject {
             apiKey = ""
             keyEntryState.markCleared()
             clearConnectionStatus()
-            statusText = "API key cleared"
+            statusText = "LiteLLM token cleared"
             usageService.reloadAfterKeyChange()
         } catch {
-            statusText = "Unable to clear API key"
+            statusText = "Unable to clear LiteLLM token"
         }
     }
 
@@ -73,7 +73,7 @@ final class SettingsViewModel: ObservableObject {
     func testConnection() {
         let trimmedAPIKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmedAPIKey.isEmpty == false else {
-            connectionStatusText = "Enter an API key to test"
+            connectionStatusText = "Enter a LiteLLM token to test"
             connectionStatusColor = .red
             return
         }
@@ -110,10 +110,10 @@ struct SettingsView: View {
                 .fontWeight(.semibold)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("API key")
+                Text("LiteLLM Token (sk-lA7Q...)")
                     .font(.headline)
                 if viewModel.keyEntryState.shouldShowEditor {
-                    SecureField("LiteLLM API key", text: $viewModel.apiKey)
+                    SecureField("LiteLLM token", text: $viewModel.apiKey)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: Self.contentWidth)
                     HStack {
