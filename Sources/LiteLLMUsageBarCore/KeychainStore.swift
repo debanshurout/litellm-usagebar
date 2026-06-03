@@ -15,6 +15,8 @@ public enum KeychainStoreError: Error, Equatable {
 public final class KeychainAPIKeyStore: APIKeyStore {
     private let service: String
     private let account: String
+    private var cachedAPIKey: String?
+    private var hasLoadedAPIKey = false
 
     public init(
         service: String = AppConstants.keychainService,
@@ -25,6 +27,10 @@ public final class KeychainAPIKeyStore: APIKeyStore {
     }
 
     public func loadAPIKey() throws -> String? {
+        if hasLoadedAPIKey {
+            return cachedAPIKey
+        }
+
         var query = baseQuery()
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
@@ -32,6 +38,8 @@ public final class KeychainAPIKeyStore: APIKeyStore {
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status == errSecItemNotFound {
+            hasLoadedAPIKey = true
+            cachedAPIKey = nil
             return nil
         }
         guard status == errSecSuccess else {
@@ -43,6 +51,8 @@ public final class KeychainAPIKeyStore: APIKeyStore {
         else {
             throw KeychainStoreError.invalidData
         }
+        hasLoadedAPIKey = true
+        cachedAPIKey = apiKey
         return apiKey
     }
 
@@ -54,16 +64,23 @@ public final class KeychainAPIKeyStore: APIKeyStore {
 
         let addStatus = SecItemAdd(query as CFDictionary, nil)
         if addStatus == errSecSuccess {
+            hasLoadedAPIKey = true
+            cachedAPIKey = apiKey
             return
         }
         if addStatus == errSecDuplicateItem {
             let updateStatus = SecItemUpdate(
                 baseQuery() as CFDictionary,
-                [kSecValueData as String: data] as CFDictionary
+                [
+                    kSecValueData as String: data,
+                    kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
+                ] as CFDictionary
             )
             guard updateStatus == errSecSuccess else {
                 throw KeychainStoreError.unexpectedStatus(updateStatus)
             }
+            hasLoadedAPIKey = true
+            cachedAPIKey = apiKey
             return
         }
         throw KeychainStoreError.unexpectedStatus(addStatus)
@@ -74,6 +91,8 @@ public final class KeychainAPIKeyStore: APIKeyStore {
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw KeychainStoreError.unexpectedStatus(status)
         }
+        hasLoadedAPIKey = true
+        cachedAPIKey = nil
     }
 
     private func baseQuery() -> [String: Any] {

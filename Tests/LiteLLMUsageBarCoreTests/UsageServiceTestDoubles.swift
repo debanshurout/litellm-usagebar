@@ -27,12 +27,14 @@ final class RecordingLiteLLMClient: LiteLLMClient {
 
 final class InMemoryAPIKeyStore: APIKeyStore {
     var apiKey: String?
+    private(set) var loadCount = 0
 
     init(apiKey: String?) {
         self.apiKey = apiKey
     }
 
     func loadAPIKey() throws -> String? {
+        loadCount += 1
         apiKey
     }
 
