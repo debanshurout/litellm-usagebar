@@ -134,6 +134,10 @@ struct SettingsView: View {
                     Text(viewModel.connectionStatusText)
                         .font(.callout)
                         .foregroundStyle(viewModel.connectionStatusColor)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(width: Self.contentWidth, alignment: .leading)
                 }
             }
 
