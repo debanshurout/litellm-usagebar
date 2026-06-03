@@ -4,9 +4,11 @@ import Foundation
 final class RecordingLiteLLMClient: LiteLLMClient {
     var dailyActivityResponse = DailyActivityResponse(rows: [])
     var userInfoResponse = UserInfoResponse(userBudget: nil, keyBudget: nil, userSpend: nil, currency: nil, budgetResetAt: nil)
+    var connectionTestResult = ConnectionTestResult(statusCode: 200)
     var error: Error?
     private(set) var dailyActivityCalls = 0
     private(set) var userInfoCalls = 0
+    private(set) var connectionTestCalls = 0
 
     func fetchDailyActivity(apiKey: String, startDate: Date, endDate: Date) async throws -> DailyActivityResponse {
         dailyActivityCalls += 1
@@ -22,6 +24,11 @@ final class RecordingLiteLLMClient: LiteLLMClient {
             throw error
         }
         return userInfoResponse
+    }
+
+    func testConnection(apiKey: String) async -> ConnectionTestResult {
+        connectionTestCalls += 1
+        return connectionTestResult
     }
 }
 

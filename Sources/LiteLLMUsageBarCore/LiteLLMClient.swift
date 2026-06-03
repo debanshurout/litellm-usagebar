@@ -3,6 +3,7 @@ import Foundation
 public protocol LiteLLMClient {
     func fetchDailyActivity(apiKey: String, startDate: Date, endDate: Date) async throws -> DailyActivityResponse
     func fetchUserInfo(apiKey: String) async throws -> UserInfoResponse
+    func testConnection(apiKey: String) async -> ConnectionTestResult
 }
 
 public enum LiteLLMClientError: Error, Equatable {
@@ -46,11 +47,29 @@ public final class URLSessionLiteLLMClient: LiteLLMClient {
         return try await get(url, apiKey: apiKey, as: UserInfoResponse.self)
     }
 
+    public func testConnection(apiKey: String) async -> ConnectionTestResult {
+        let url = baseURL
+            .appendingPathComponent("user")
+            .appendingPathComponent("info")
+        let request = makeGETRequest(url: url, apiKey: apiKey)
+
+        do {
+            let (_, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                DiagnosticLogger.log("connection test failed: malformed HTTP response")
+                return ConnectionTestResult(statusCode: nil)
+            }
+
+            DiagnosticLogger.log("connection test status=\(httpResponse.statusCode)")
+            return ConnectionTestResult(statusCode: httpResponse.statusCode)
+        } catch {
+            DiagnosticLogger.log("connection test failed: \(error)")
+            return ConnectionTestResult(statusCode: nil)
+        }
+    }
+
     private func get<T: Decodable>(_ url: URL, apiKey: String, as type: T.Type) async throws -> T {
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "x-litellm-api-key")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        let request = makeGETRequest(url: url, apiKey: apiKey)
 
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -74,6 +93,14 @@ public final class URLSessionLiteLLMClient: LiteLLMClient {
         default:
             throw LiteLLMClientError.server(statusCode: httpResponse.statusCode)
         }
+    }
+
+    private func makeGETRequest(url: URL, apiKey: String) -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "x-litellm-api-key")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        return request
     }
 
     private static let dayFormatter: DateFormatter = {

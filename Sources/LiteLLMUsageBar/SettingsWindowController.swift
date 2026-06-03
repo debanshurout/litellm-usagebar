@@ -6,16 +6,19 @@ import SwiftUI
 final class SettingsWindowController {
     private let apiKeyStore: APIKeyStore
     private let usageService: UsageService
+    private let connectionTester: LiteLLMClient
     private let notificationCenter: UserNotificationCentering
     private var window: NSWindow?
 
     init(
         apiKeyStore: APIKeyStore,
         usageService: UsageService,
+        connectionTester: LiteLLMClient,
         notificationCenter: UserNotificationCentering
     ) {
         self.apiKeyStore = apiKeyStore
         self.usageService = usageService
+        self.connectionTester = connectionTester
         self.notificationCenter = notificationCenter
     }
 
@@ -25,11 +28,12 @@ final class SettingsWindowController {
                 viewModel: SettingsViewModel(
                     apiKeyStore: apiKeyStore,
                     usageService: usageService,
+                    connectionTester: connectionTester,
                     notificationCenter: notificationCenter
                 )
             )
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 460, height: 320),
+                contentRect: NSRect(x: 0, y: 0, width: 460, height: 350),
                 styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false

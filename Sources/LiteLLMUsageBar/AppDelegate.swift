@@ -23,9 +23,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             thresholdStore: UserDefaultsThresholdStore()
         )
         let keyStore = KeychainAPIKeyStore()
+        let liteLLMClient = URLSessionLiteLLMClient()
 
         usageService = UsageService(
-            client: URLSessionLiteLLMClient(),
+            client: liteLLMClient,
             apiKeyStore: keyStore,
             snapshotStore: UserDefaultsSnapshotStore(),
             notificationService: notificationService
@@ -33,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindowController = SettingsWindowController(
             apiKeyStore: keyStore,
             usageService: usageService,
+            connectionTester: liteLLMClient,
             notificationCenter: notificationCenter
         )
         statusBarController = StatusBarController(
