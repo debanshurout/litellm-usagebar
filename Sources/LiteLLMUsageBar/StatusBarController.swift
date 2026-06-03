@@ -136,11 +136,25 @@ private extension StatusBarController {
         if let symbol = NSImage(systemSymbolName: "dollarsign.circle.fill", accessibilityDescription: "LiteLLM Usage") {
             let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
             let configuredSymbol = symbol.withSymbolConfiguration(configuration) ?? symbol
-            configuredSymbol.isTemplate = true
-            return configuredSymbol
+            return centeredIcon(configuredSymbol, verticalOffset: 1)
         }
 
         return fallbackDollarIcon()
+    }
+
+    static func centeredIcon(_ source: NSImage, verticalOffset: CGFloat) -> NSImage {
+        let size = NSSize(width: 16, height: 16)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        source.draw(
+            in: NSRect(x: 0, y: verticalOffset, width: size.width, height: size.height),
+            from: .zero,
+            operation: .sourceOver,
+            fraction: 1
+        )
+        image.unlockFocus()
+        image.isTemplate = true
+        return image
     }
 
     static func fallbackDollarIcon() -> NSImage {
