@@ -38,6 +38,7 @@ final class SettingsWindowController {
                 backing: .buffered,
                 defer: false
             )
+            window.isReleasedWhenClosed = false
             window.title = "LiteLLM UsageBar Settings"
             window.contentView = NSHostingView(rootView: view)
             window.center()
