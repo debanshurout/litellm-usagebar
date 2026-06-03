@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 final class SettingsViewModel: ObservableObject {
     @Published var apiKey: String = ""
+    @Published var keyEntryState: APIKeySettingsState
     @Published var statusText: String = ""
     @Published var notificationStatus: String = "Checking notifications..."
 
@@ -20,14 +21,24 @@ final class SettingsViewModel: ObservableObject {
         self.apiKeyStore = apiKeyStore
         self.usageService = usageService
         self.notificationCenter = notificationCenter
-        self.apiKey = (try? apiKeyStore.loadAPIKey()) ?? ""
+        let storedAPIKey = (try? apiKeyStore.loadAPIKey()) ?? ""
+        self.apiKey = storedAPIKey
+        self.keyEntryState = APIKeySettingsState(existingAPIKey: storedAPIKey)
         Task { await refreshNotificationStatus() }
     }
 
     func save() {
+        let trimmedAPIKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmedAPIKey.isEmpty == false else {
+            statusText = "API key is required"
+            return
+        }
+
         do {
-            try apiKeyStore.saveAPIKey(apiKey.trimmingCharacters(in: .whitespacesAndNewlines))
-            statusText = "API key saved"
+            try apiKeyStore.saveAPIKey(trimmedAPIKey)
+            apiKey = trimmedAPIKey
+            keyEntryState.markSaved()
+            statusText = ""
             usageService.reloadAfterKeyChange()
         } catch {
             statusText = "Unable to save API key"
@@ -38,6 +49,7 @@ final class SettingsViewModel: ObservableObject {
         do {
             try apiKeyStore.clearAPIKey()
             apiKey = ""
+            keyEntryState.markCleared()
             statusText = "API key cleared"
             usageService.reloadAfterKeyChange()
         } catch {
@@ -53,6 +65,11 @@ final class SettingsViewModel: ObservableObject {
 
         apiKey = clipboardText.trimmingCharacters(in: .whitespacesAndNewlines)
         statusText = "API key pasted"
+    }
+
+    func beginResave() {
+        keyEntryState.beginResave()
+        statusText = ""
     }
 
     func refreshNotificationStatus() async {
@@ -72,13 +89,19 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("API key")
                     .font(.headline)
-                SecureField("LiteLLM API key", text: $viewModel.apiKey)
-                    .textFieldStyle(.roundedBorder)
-                HStack {
-                    Button("Save") { viewModel.save() }
-                        .keyboardShortcut(.defaultAction)
-                    Button("Paste") { viewModel.pasteAPIKeyFromClipboard() }
-                    Button("Clear") { viewModel.clear() }
+                if viewModel.keyEntryState.shouldShowEditor {
+                    SecureField("LiteLLM API key", text: $viewModel.apiKey)
+                        .textFieldStyle(.roundedBorder)
+                    HStack {
+                        Button("Save") { viewModel.save() }
+                            .keyboardShortcut(.defaultAction)
+                        Button("Paste") { viewModel.pasteAPIKeyFromClipboard() }
+                        Button("Clear") { viewModel.clear() }
+                    }
+                } else {
+                    Text(viewModel.keyEntryState.savedMessage)
+                        .foregroundStyle(.secondary)
+                    Button("Resave Key") { viewModel.beginResave() }
                 }
             }
 
