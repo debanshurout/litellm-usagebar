@@ -74,6 +74,8 @@ public final class UsageService: ObservableObject {
 
         let stale = state.latestSnapshot ?? ((try? snapshotStore.load()) ?? nil)
         guard let apiKey = try? apiKeyStore.loadAPIKey(), apiKey.isEmpty == false else {
+            refreshToken = UUID()
+            refreshTask = nil
             DiagnosticLogger.log("refresh skipped: missing API key")
             state = .missingAPIKey(stale: stale)
             return
@@ -89,22 +91,37 @@ public final class UsageService: ObservableObject {
                 let now = dateProvider.now()
                 let range = aggregator.currentMonthRange(containing: now)
                 async let activity = client.fetchDailyActivity(apiKey: apiKey, startDate: range.start, endDate: range.end)
-                async let userInfo = client.fetchUserInfo(apiKey: apiKey)
+                async let userInfo = Self.fetchOptionalUserInfo(client: client, apiKey: apiKey)
                 let snapshot = try aggregator.makeSnapshot(
                     dailyActivity: try await activity,
-                    userInfo: try await userInfo,
+                    userInfo: await userInfo,
                     now: now
                 )
+                guard Task.isCancelled == false else {
+                    return
+                }
+                guard await Self.isCurrentRefresh(token, service: self) else {
+                    return
+                }
                 try? snapshotStore.save(snapshot)
+                guard Task.isCancelled == false else {
+                    return
+                }
+                guard await Self.isCurrentRefresh(token, service: self) else {
+                    return
+                }
                 await notificationService.evaluate(snapshot)
                 await MainActor.run {
-                    guard let self, self.refreshToken == token else {
+                    guard Task.isCancelled == false, let self, self.refreshToken == token else {
                         return
                     }
                     DiagnosticLogger.log("refresh succeeded budgetAvailable=\(snapshot.budget != nil)")
                     self.state = .loaded(snapshot)
                 }
             } catch {
+                guard Task.isCancelled == false else {
+                    return
+                }
                 await MainActor.run {
                     guard let self, self.refreshToken == token else {
                         return
@@ -125,6 +142,24 @@ public final class UsageService: ObservableObject {
 
     public func reloadAfterKeyChange() {
         Task { await refresh(trigger: .manual) }
+    }
+
+    private static func fetchOptionalUserInfo(client: LiteLLMClient, apiKey: String) async -> UserInfoResponse {
+        do {
+            return try await client.fetchUserInfo(apiKey: apiKey)
+        } catch {
+            DiagnosticLogger.log("user info unavailable; continuing without budget: \(error)")
+            return UserInfoResponse(userBudget: nil, keyBudget: nil, userSpend: nil, currency: nil, budgetResetAt: nil)
+        }
+    }
+
+    private static func isCurrentRefresh(_ token: UUID, service: UsageService?) async -> Bool {
+        await MainActor.run {
+            guard let service else {
+                return false
+            }
+            return service.refreshToken == token
+        }
     }
 
     private static func map(_ error: Error) -> UsageRefreshError {

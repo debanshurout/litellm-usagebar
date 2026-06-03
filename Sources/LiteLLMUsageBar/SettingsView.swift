@@ -120,6 +120,7 @@ struct SettingsView: View {
                         testConnectionButton
                         Button("Save") { viewModel.save() }
                             .keyboardShortcut(.defaultAction)
+                        Button("Clear") { viewModel.clear() }
                     }
                 } else {
                     Text(viewModel.keyEntryState.savedMessage)
@@ -127,6 +128,7 @@ struct SettingsView: View {
                     HStack {
                         testConnectionButton
                         Button("Resave Key") { viewModel.beginResave() }
+                        Button("Clear") { viewModel.clear() }
                     }
                 }
 

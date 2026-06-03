@@ -56,12 +56,14 @@ public struct UsageFormatter {
 
     public init() {
         let formatter = NumberFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.locale = Locale(identifier: "en_US")
         formatter.numberStyle = .currency
         formatter.currencyCode = "USD"
         formatter.currencySymbol = "$"
         formatter.minimumFractionDigits = 2
         formatter.maximumFractionDigits = 2
+        formatter.positiveFormat = "¤#,##0.00"
+        formatter.negativeFormat = "-¤#,##0.00"
         self.currencyFormatter = formatter
     }
 

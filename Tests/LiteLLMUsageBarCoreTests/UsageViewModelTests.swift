@@ -25,6 +25,14 @@ final class UsageViewModelTests: XCTestCase {
         XCTAssertNil(display.messageText)
     }
 
+    func testMoneyFormatterUsesCompactUSDDollarFormat() {
+        let text = UsageFormatter().money(Decimal(string: "42.1")!, currency: "USD")
+
+        XCTAssertEqual(text, "$42.10")
+        XCTAssertFalse(text.contains("\u{00A0}"))
+        XCTAssertFalse(text.contains("\u{202F}"))
+    }
+
     func testMissingKeyAndUnavailableStates() {
         let now = ISO8601DateFormatter().date(from: "2026-06-03T12:35:00Z")!
 
