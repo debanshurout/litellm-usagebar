@@ -1,3 +1,4 @@
+import AppKit
 import LiteLLMUsageBarCore
 import SwiftUI
 
@@ -44,6 +45,16 @@ final class SettingsViewModel: ObservableObject {
         }
     }
 
+    func pasteAPIKeyFromClipboard() {
+        guard let clipboardText = NSPasteboard.general.string(forType: .string) else {
+            statusText = "Clipboard is empty"
+            return
+        }
+
+        apiKey = clipboardText.trimmingCharacters(in: .whitespacesAndNewlines)
+        statusText = "API key pasted"
+    }
+
     func refreshNotificationStatus() async {
         notificationStatus = await notificationCenter.authorizationDescription()
     }
@@ -66,6 +77,7 @@ struct SettingsView: View {
                 HStack {
                     Button("Save") { viewModel.save() }
                         .keyboardShortcut(.defaultAction)
+                    Button("Paste") { viewModel.pasteAPIKeyFromClipboard() }
                     Button("Clear") { viewModel.clear() }
                 }
             }
