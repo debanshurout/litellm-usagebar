@@ -14,7 +14,7 @@ final class ConnectionTestResultTests: XCTestCase {
 
         XCTAssertEqual(
             result.message(shouldPromptToSave: true),
-            "Connection successful (HTTP 200). Click Save to store this key."
+            "Connection successful (HTTP 200)\nClick Save to store this key."
         )
     }
 

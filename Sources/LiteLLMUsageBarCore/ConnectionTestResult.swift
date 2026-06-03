@@ -25,7 +25,7 @@ public struct ConnectionTestResult: Equatable {
             return message
         }
 
-        return "\(message). Click Save to store this key."
+        return "\(message)\nClick Save to store this key."
     }
 
     public init(statusCode: Int?) {
