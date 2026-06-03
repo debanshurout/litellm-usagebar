@@ -7,6 +7,7 @@ final class SettingsWindowController {
     private let apiKeyStore: APIKeyStore
     private let usageService: UsageService
     private let connectionTester: LiteLLMClient
+    private let amountVisibilityStore: MenuBarAmountVisibilityStore
     private let notificationCenter: UserNotificationCentering
     private var window: NSWindow?
 
@@ -14,11 +15,13 @@ final class SettingsWindowController {
         apiKeyStore: APIKeyStore,
         usageService: UsageService,
         connectionTester: LiteLLMClient,
+        amountVisibilityStore: MenuBarAmountVisibilityStore,
         notificationCenter: UserNotificationCentering
     ) {
         self.apiKeyStore = apiKeyStore
         self.usageService = usageService
         self.connectionTester = connectionTester
+        self.amountVisibilityStore = amountVisibilityStore
         self.notificationCenter = notificationCenter
     }
 
@@ -29,11 +32,12 @@ final class SettingsWindowController {
                     apiKeyStore: apiKeyStore,
                     usageService: usageService,
                     connectionTester: connectionTester,
+                    amountVisibilityStore: amountVisibilityStore,
                     notificationCenter: notificationCenter
                 )
             )
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 460, height: 350),
+                contentRect: NSRect(x: 0, y: 0, width: 460, height: 390),
                 styleMask: [.titled, .closable],
                 backing: .buffered,
                 defer: false

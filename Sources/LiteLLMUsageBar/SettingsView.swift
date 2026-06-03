@@ -9,23 +9,28 @@ final class SettingsViewModel: ObservableObject {
     @Published var connectionStatusText: String = ""
     @Published var connectionStatusColor: Color = .secondary
     @Published var isTestingConnection = false
+    @Published var menuBarAmountButtonTitle: String
     @Published var notificationStatus: String = "Checking notifications..."
 
     private let apiKeyStore: APIKeyStore
     private let usageService: UsageService
     private let connectionTester: LiteLLMClient
+    private let amountVisibilityStore: MenuBarAmountVisibilityStore
     private let notificationCenter: UserNotificationCentering
 
     init(
         apiKeyStore: APIKeyStore,
         usageService: UsageService,
         connectionTester: LiteLLMClient,
+        amountVisibilityStore: MenuBarAmountVisibilityStore,
         notificationCenter: UserNotificationCentering
     ) {
         self.apiKeyStore = apiKeyStore
         self.usageService = usageService
         self.connectionTester = connectionTester
+        self.amountVisibilityStore = amountVisibilityStore
         self.notificationCenter = notificationCenter
+        self.menuBarAmountButtonTitle = amountVisibilityStore.toggleButtonTitle
         let storedAPIKey = (try? apiKeyStore.loadAPIKey()) ?? ""
         self.apiKey = storedAPIKey
         self.keyEntryState = APIKeySettingsState(existingAPIKey: storedAPIKey)
@@ -94,6 +99,11 @@ final class SettingsViewModel: ObservableObject {
         notificationStatus = await notificationCenter.authorizationDescription()
     }
 
+    func toggleMenuBarAmountVisibility() {
+        amountVisibilityStore.toggle()
+        menuBarAmountButtonTitle = amountVisibilityStore.toggleButtonTitle
+    }
+
     private func clearConnectionStatus() {
         connectionStatusText = ""
         connectionStatusColor = .secondary
@@ -145,6 +155,14 @@ struct SettingsView: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
+                Text("Menu Bar")
+                    .font(.headline)
+                Button(viewModel.menuBarAmountButtonTitle) {
+                    viewModel.toggleMenuBarAmountVisibility()
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
                 Text("Notifications")
                     .font(.headline)
                 Text(viewModel.notificationStatus)
@@ -159,7 +177,7 @@ struct SettingsView: View {
             Spacer()
         }
         .padding(24)
-        .frame(width: 460, height: 350)
+        .frame(width: 460, height: 390)
     }
 
     private var testConnectionButton: some View {

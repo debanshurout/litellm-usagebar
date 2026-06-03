@@ -6,12 +6,19 @@ import LiteLLMUsageBarCore
 final class StatusBarController: NSObject {
     private let statusItem: NSStatusItem
     private let usageService: UsageService
+    private let amountVisibilityStore: MenuBarAmountVisibilityStore
     private let openSettings: () -> Void
+    private var currentDisplay = UsageDisplayState.make(from: .loading(stale: nil), now: Date())
     private var cancellables: Set<AnyCancellable> = []
 
-    init(usageService: UsageService, openSettings: @escaping () -> Void) {
+    init(
+        usageService: UsageService,
+        amountVisibilityStore: MenuBarAmountVisibilityStore,
+        openSettings: @escaping () -> Void
+    ) {
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         self.usageService = usageService
+        self.amountVisibilityStore = amountVisibilityStore
         self.openSettings = openSettings
         super.init()
         configureButton()
@@ -22,6 +29,7 @@ final class StatusBarController: NSObject {
         statusItem.button?.title = "Usage..."
         statusItem.button?.target = self
         statusItem.button?.action = #selector(showMenu)
+        renderStatusItem()
     }
 
     private func bind() {
@@ -29,9 +37,36 @@ final class StatusBarController: NSObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] state in
                 let display = UsageDisplayState.make(from: state, now: Date())
-                self?.statusItem.button?.title = display.menuBarTitle
+                self?.currentDisplay = display
+                self?.renderStatusItem()
             }
             .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .menuBarAmountVisibilityDidChange)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.renderStatusItem()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func renderStatusItem() {
+        guard let button = statusItem.button else {
+            return
+        }
+
+        if amountVisibilityStore.showsAmountOnMenuBar {
+            statusItem.length = NSStatusItem.variableLength
+            button.title = currentDisplay.menuBarTitle
+            button.image = nil
+            button.imagePosition = .noImage
+            return
+        }
+
+        statusItem.length = 28
+        button.title = ""
+        button.image = Self.dollarIcon()
+        button.imagePosition = .imageOnly
     }
 
     @objc private func showMenu() {
@@ -87,6 +122,31 @@ final class StatusBarController: NSObject {
 
     @objc private func quit() {
         NSApplication.shared.terminate(nil)
+    }
+}
+
+private extension StatusBarController {
+    static func dollarIcon() -> NSImage {
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size)
+        image.lockFocus()
+
+        NSColor(calibratedRed: 0.12, green: 0.58, blue: 0.94, alpha: 1).set()
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.boldSystemFont(ofSize: 22),
+            .foregroundColor: NSColor(calibratedRed: 0.12, green: 0.58, blue: 0.94, alpha: 1),
+            .paragraphStyle: paragraphStyle
+        ]
+        NSString(string: "$").draw(
+            in: NSRect(x: 0, y: -3, width: size.width, height: size.height + 4),
+            withAttributes: attributes
+        )
+
+        image.unlockFocus()
+        image.isTemplate = false
+        return image
     }
 }
 

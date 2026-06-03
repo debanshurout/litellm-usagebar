@@ -24,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         let keyStore = KeychainAPIKeyStore()
         let liteLLMClient = URLSessionLiteLLMClient()
+        let amountVisibilityStore = UserDefaultsMenuBarAmountVisibilityStore()
 
         usageService = UsageService(
             client: liteLLMClient,
@@ -35,10 +36,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             apiKeyStore: keyStore,
             usageService: usageService,
             connectionTester: liteLLMClient,
+            amountVisibilityStore: amountVisibilityStore,
             notificationCenter: notificationCenter
         )
         statusBarController = StatusBarController(
             usageService: usageService,
+            amountVisibilityStore: amountVisibilityStore,
             openSettings: { [weak settingsWindowController] in
                 settingsWindowController?.show()
             }
