@@ -8,6 +8,7 @@ final class APIKeySettingsStateTests: XCTestCase {
         XCTAssertTrue(state.hasSavedKey)
         XCTAssertFalse(state.isEditing)
         XCTAssertFalse(state.shouldShowEditor)
+        XCTAssertFalse(state.shouldShowClearButton)
         XCTAssertEqual(state.savedMessage, "Token Saved")
     }
 
@@ -19,6 +20,7 @@ final class APIKeySettingsStateTests: XCTestCase {
         XCTAssertTrue(state.hasSavedKey)
         XCTAssertTrue(state.isEditing)
         XCTAssertTrue(state.shouldShowEditor)
+        XCTAssertTrue(state.shouldShowClearButton)
     }
 
     func testSaveSwitchesBackToSavedMode() {
@@ -29,6 +31,7 @@ final class APIKeySettingsStateTests: XCTestCase {
         XCTAssertTrue(state.hasSavedKey)
         XCTAssertFalse(state.isEditing)
         XCTAssertFalse(state.shouldShowEditor)
+        XCTAssertFalse(state.shouldShowClearButton)
     }
 
     func testClearReturnsToEditingMode() {
@@ -39,5 +42,6 @@ final class APIKeySettingsStateTests: XCTestCase {
         XCTAssertFalse(state.hasSavedKey)
         XCTAssertTrue(state.isEditing)
         XCTAssertTrue(state.shouldShowEditor)
+        XCTAssertTrue(state.shouldShowClearButton)
     }
 }

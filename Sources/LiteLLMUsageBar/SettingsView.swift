@@ -120,7 +120,7 @@ struct SettingsView: View {
                         testConnectionButton
                         Button("Save") { viewModel.save() }
                             .keyboardShortcut(.defaultAction)
-                        Button("Clear") { viewModel.clear() }
+                        clearButton
                     }
                 } else {
                     Text(viewModel.keyEntryState.savedMessage)
@@ -128,7 +128,6 @@ struct SettingsView: View {
                     HStack {
                         testConnectionButton
                         Button("Resave Key") { viewModel.beginResave() }
-                        Button("Clear") { viewModel.clear() }
                     }
                 }
 
@@ -172,6 +171,13 @@ struct SettingsView: View {
     private var testConnectionButton: some View {
         Button("Test Connection") { viewModel.testConnection() }
             .disabled(viewModel.isTestingConnection)
+    }
+
+    @ViewBuilder
+    private var clearButton: some View {
+        if viewModel.keyEntryState.shouldShowClearButton {
+            Button("Clear") { viewModel.clear() }
+        }
     }
 
     private static let contentWidth: CGFloat = 240

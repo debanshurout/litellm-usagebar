@@ -8,6 +8,10 @@ public struct APIKeySettingsState: Equatable {
         isEditing || !hasSavedKey
     }
 
+    public var shouldShowClearButton: Bool {
+        shouldShowEditor
+    }
+
     public var savedMessage: String {
         "Token Saved"
     }
