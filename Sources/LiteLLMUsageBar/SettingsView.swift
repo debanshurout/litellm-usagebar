@@ -115,6 +115,7 @@ struct SettingsView: View {
                 if viewModel.keyEntryState.shouldShowEditor {
                     SecureField("LiteLLM API key", text: $viewModel.apiKey)
                         .textFieldStyle(.roundedBorder)
+                        .frame(width: Self.contentWidth)
                     HStack {
                         Button("Save") { viewModel.save() }
                             .keyboardShortcut(.defaultAction)
@@ -158,12 +159,15 @@ struct SettingsView: View {
 
             Spacer()
         }
+        .frame(width: Self.contentWidth, alignment: .leading)
         .padding(24)
-        .frame(width: 460, height: 350)
+        .frame(width: 460, height: 350, alignment: .top)
     }
 
     private var testConnectionButton: some View {
         Button("Test Connection") { viewModel.testConnection() }
             .disabled(viewModel.isTestingConnection)
     }
+
+    private static let contentWidth: CGFloat = 240
 }
