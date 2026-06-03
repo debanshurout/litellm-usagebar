@@ -44,16 +44,18 @@ final class StatusBarController: NSObject {
         let display = UsageDisplayState.make(from: usageService.state, now: Date())
         let menu = NSMenu()
 
-        menu.addItem(informationalItem(display.headerText, font: .boldSystemFont(ofSize: NSFont.systemFontSize)))
+        let header = NSMenuItem(title: display.headerText, action: nil, keyEquivalent: "")
+        header.isEnabled = false
+        menu.addItem(header)
         menu.addItem(.separator())
-        menu.addItem(informationalItem(display.monthToDateText))
-        menu.addItem(informationalItem(display.todayText))
-        menu.addItem(informationalItem(display.budgetText))
-        menu.addItem(informationalItem(display.lastUpdatedText))
+        menu.addItem(disabledItem(display.monthToDateText))
+        menu.addItem(disabledItem(display.todayText))
+        menu.addItem(disabledItem(display.budgetText))
+        menu.addItem(disabledItem(display.lastUpdatedText))
 
         if let message = display.messageText {
             menu.addItem(.separator())
-            menu.addItem(informationalItem(message))
+            menu.addItem(disabledItem(message))
         }
 
         menu.addItem(.separator())
@@ -65,23 +67,9 @@ final class StatusBarController: NSObject {
         return menu
     }
 
-    private func informationalItem(_ title: String, font: NSFont = .systemFont(ofSize: NSFont.systemFontSize)) -> NSMenuItem {
-        let label = NSTextField(labelWithString: title)
-        label.font = font
-        label.textColor = .labelColor
-        label.lineBreakMode = .byTruncatingTail
-        label.translatesAutoresizingMaskIntoConstraints = false
-
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: 300, height: 28))
-        container.addSubview(label)
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 18),
-            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -18),
-            label.centerYAnchor.constraint(equalTo: container.centerYAnchor)
-        ])
-
-        let item = NSMenuItem()
-        item.view = container
+    private func disabledItem(_ title: String) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
         return item
     }
 
