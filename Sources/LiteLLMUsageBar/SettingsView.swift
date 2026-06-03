@@ -84,7 +84,7 @@ final class SettingsViewModel: ObservableObject {
 
         Task {
             let result = await connectionTester.testConnection(apiKey: trimmedAPIKey)
-            connectionStatusText = result.message
+            connectionStatusText = result.message(shouldPromptToSave: keyEntryState.shouldShowEditor)
             connectionStatusColor = result.isSuccess ? .green : .red
             isTestingConnection = false
         }
@@ -117,10 +117,9 @@ struct SettingsView: View {
                         .textFieldStyle(.roundedBorder)
                         .frame(width: Self.contentWidth)
                     HStack {
+                        testConnectionButton
                         Button("Save") { viewModel.save() }
                             .keyboardShortcut(.defaultAction)
-                        testConnectionButton
-                        Button("Clear") { viewModel.clear() }
                     }
                 } else {
                     Text(viewModel.keyEntryState.savedMessage)

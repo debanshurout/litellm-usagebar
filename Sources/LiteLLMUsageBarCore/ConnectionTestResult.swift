@@ -20,6 +20,14 @@ public struct ConnectionTestResult: Equatable {
         return "Connection failed (HTTP \(statusCode))"
     }
 
+    public func message(shouldPromptToSave: Bool) -> String {
+        guard isSuccess && shouldPromptToSave else {
+            return message
+        }
+
+        return "\(message). Click Save to store this key."
+    }
+
     public init(statusCode: Int?) {
         self.statusCode = statusCode
     }
