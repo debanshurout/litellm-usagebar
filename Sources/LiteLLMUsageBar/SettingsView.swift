@@ -1,0 +1,97 @@
+import LiteLLMUsageBarCore
+import SwiftUI
+
+@MainActor
+final class SettingsViewModel: ObservableObject {
+    @Published var apiKey: String = ""
+    @Published var statusText: String = ""
+    @Published var notificationStatus: String = "Checking notifications..."
+
+    private let apiKeyStore: APIKeyStore
+    private let usageService: UsageService
+    private let notificationCenter: UserNotificationCentering
+
+    init(
+        apiKeyStore: APIKeyStore,
+        usageService: UsageService,
+        notificationCenter: UserNotificationCentering
+    ) {
+        self.apiKeyStore = apiKeyStore
+        self.usageService = usageService
+        self.notificationCenter = notificationCenter
+        self.apiKey = (try? apiKeyStore.loadAPIKey()) ?? ""
+        Task { await refreshNotificationStatus() }
+    }
+
+    func save() {
+        do {
+            try apiKeyStore.saveAPIKey(apiKey.trimmingCharacters(in: .whitespacesAndNewlines))
+            statusText = "API key saved"
+            usageService.reloadAfterKeyChange()
+        } catch {
+            statusText = "Unable to save API key"
+        }
+    }
+
+    func clear() {
+        do {
+            try apiKeyStore.clearAPIKey()
+            apiKey = ""
+            statusText = "API key cleared"
+            usageService.reloadAfterKeyChange()
+        } catch {
+            statusText = "Unable to clear API key"
+        }
+    }
+
+    func refreshNotificationStatus() async {
+        notificationStatus = await notificationCenter.authorizationDescription()
+    }
+}
+
+struct SettingsView: View {
+    @ObservedObject var viewModel: SettingsViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("LiteLLM UsageBar")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("API key")
+                    .font(.headline)
+                SecureField("LiteLLM API key", text: $viewModel.apiKey)
+                    .textFieldStyle(.roundedBorder)
+                HStack {
+                    Button("Save") { viewModel.save() }
+                        .keyboardShortcut(.defaultAction)
+                    Button("Clear") { viewModel.clear() }
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Gateway")
+                    .font(.headline)
+                Text(AppConstants.gatewayURL.absoluteString)
+                    .textSelection(.enabled)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Notifications")
+                    .font(.headline)
+                Text(viewModel.notificationStatus)
+                Button("Refresh Notification Status") {
+                    Task { await viewModel.refreshNotificationStatus() }
+                }
+            }
+
+            Text(viewModel.statusText)
+                .foregroundStyle(.secondary)
+
+            Spacer()
+        }
+        .padding(24)
+        .frame(width: 460, height: 320)
+    }
+}

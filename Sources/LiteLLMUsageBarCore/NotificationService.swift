@@ -121,3 +121,21 @@ public final class UNUserNotificationCenterAdapter: UserNotificationCentering {
         try? await center.add(request)
     }
 }
+
+public final class DisabledUserNotificationCenterAdapter: UserNotificationCentering {
+    private let reason: String
+
+    public init(reason: String = "Notifications unavailable") {
+        self.reason = reason
+    }
+
+    public func requestAuthorization() async -> Bool {
+        false
+    }
+
+    public func authorizationDescription() async -> String {
+        reason
+    }
+
+    public func deliver(title: String, body: String) async {}
+}

@@ -10,6 +10,10 @@ public final class UsageService: ObservableObject {
 
     @Published public private(set) var state: UsageRefreshState
 
+    public var statePublisher: AnyPublisher<UsageRefreshState, Never> {
+        $state.eraseToAnyPublisher()
+    }
+
     private let client: LiteLLMClient
     private let apiKeyStore: APIKeyStore
     private let snapshotStore: SnapshotStore
