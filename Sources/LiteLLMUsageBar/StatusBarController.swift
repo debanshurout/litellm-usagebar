@@ -67,6 +67,7 @@ final class StatusBarController: NSObject {
         button.title = ""
         button.image = Self.dollarIcon()
         button.imagePosition = .imageOnly
+        button.imageScaling = .scaleProportionallyDown
     }
 
     @objc private func showMenu() {
@@ -132,6 +133,17 @@ final class StatusBarController: NSObject {
 
 private extension StatusBarController {
     static func dollarIcon() -> NSImage {
+        if let symbol = NSImage(systemSymbolName: "dollarsign", accessibilityDescription: "LiteLLM Usage") {
+            let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
+            let configuredSymbol = symbol.withSymbolConfiguration(configuration) ?? symbol
+            configuredSymbol.isTemplate = true
+            return configuredSymbol
+        }
+
+        return fallbackDollarIcon()
+    }
+
+    static func fallbackDollarIcon() -> NSImage {
         let size = NSSize(width: 16, height: 16)
         let image = NSImage(size: size)
         image.lockFocus()
