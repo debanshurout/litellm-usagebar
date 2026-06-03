@@ -63,11 +63,11 @@ final class StatusBarController: NSObject {
             return
         }
 
-        statusItem.length = NSStatusItem.squareLength
+        statusItem.length = NSStatusItem.variableLength
         button.title = ""
         button.image = Self.dollarIcon()
-        button.imagePosition = .imageOnly
-        button.imageScaling = .scaleProportionallyDown
+        button.image?.size = NSSize(width: 16, height: 16)
+        button.imagePosition = .imageLeft
     }
 
     @objc private func showMenu() {
@@ -136,25 +136,11 @@ private extension StatusBarController {
         if let symbol = NSImage(systemSymbolName: "dollarsign.circle.fill", accessibilityDescription: "LiteLLM Usage") {
             let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
             let configuredSymbol = symbol.withSymbolConfiguration(configuration) ?? symbol
-            return centeredIcon(configuredSymbol, verticalOffset: 1)
+            configuredSymbol.isTemplate = true
+            return configuredSymbol
         }
 
         return fallbackDollarIcon()
-    }
-
-    static func centeredIcon(_ source: NSImage, verticalOffset: CGFloat) -> NSImage {
-        let size = NSSize(width: 16, height: 16)
-        let image = NSImage(size: size)
-        image.lockFocus()
-        source.draw(
-            in: NSRect(x: 0, y: verticalOffset, width: size.width, height: size.height),
-            from: .zero,
-            operation: .sourceOver,
-            fraction: 1
-        )
-        image.unlockFocus()
-        image.isTemplate = true
-        return image
     }
 
     static func fallbackDollarIcon() -> NSImage {
@@ -171,7 +157,7 @@ private extension StatusBarController {
         let textSize = symbol.size(withAttributes: attributes)
         let drawPoint = NSPoint(
             x: (size.width - textSize.width) / 2,
-            y: (size.height - textSize.height) / 2 - 1
+            y: (size.height - textSize.height) / 2
         )
         symbol.draw(at: drawPoint, withAttributes: attributes)
 
