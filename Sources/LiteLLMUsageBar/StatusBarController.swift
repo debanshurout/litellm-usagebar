@@ -133,8 +133,8 @@ final class StatusBarController: NSObject {
 
 private extension StatusBarController {
     static func dollarIcon() -> NSImage {
-        if let symbol = NSImage(systemSymbolName: "dollarsign", accessibilityDescription: "LiteLLM Usage") {
-            let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
+        if let symbol = NSImage(systemSymbolName: "dollarsign.circle.fill", accessibilityDescription: "LiteLLM Usage") {
+            let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
             let configuredSymbol = symbol.withSymbolConfiguration(configuration) ?? symbol
             configuredSymbol.isTemplate = true
             return configuredSymbol
