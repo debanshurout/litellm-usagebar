@@ -26,9 +26,14 @@ final class StatusBarController: NSObject {
     }
 
     private func configureButton() {
-        statusItem.button?.title = "Usage..."
-        statusItem.button?.target = self
-        statusItem.button?.action = #selector(showMenu)
+        statusItem.isVisible = true
+        guard let button = statusItem.button else {
+            print("[LiteLLMUsageBar] ERROR: statusItem.button is nil")
+            return
+        }
+        button.title = "Usage..."
+        button.target = self
+        button.action = #selector(showMenu)
         renderStatusItem()
     }
 
